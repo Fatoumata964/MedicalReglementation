@@ -1,0 +1,4 @@
+pydantic
+urllib3
+uvicorn
+fastapi
