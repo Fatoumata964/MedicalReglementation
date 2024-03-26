@@ -6,7 +6,7 @@ colabcode
 spacy
 scispacy
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_ner_bc5cdr_md-0.5.3.tar.gz
-/content/drive/MyDrive/stage/hh/MedicalReglementation/models/sent2vec/.
+/content/MedicalReglementation/models/sent2vec/sent2vec/.
 faiss-cpu
 huggingface_hub
 langchain
