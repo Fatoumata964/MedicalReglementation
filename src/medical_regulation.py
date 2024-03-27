@@ -22,7 +22,7 @@ mistral_llm = llm()
 model = sent2vec.Sent2vecModel()
 try:
       # Chargement du modèle depuis le chemin spécifié
-        model.load_model("./models/biosentvec.crdownload")
+        model.load_model("/content/drive/MyDrive/stage/hh/Medical_Reglementation/models/biosentvec.crdownload")
 except Exception as e:
       # Gestion des erreurs lors du chargement du modèle
       print(e)
