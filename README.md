@@ -7,7 +7,7 @@ This is a simple API that extracts regulations related to a given drug. The API 
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/Athena75/MedicalReglementation.git
+    git clone https://github.com/Fatoumata964/MedicalReglementation.git
    cd MedicalReglementation
     ```
    
