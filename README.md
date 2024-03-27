@@ -11,13 +11,16 @@ This is a simple API that extracts regulations related to a given drug. The API 
    cd MedicalReglementation
     ```
    
-2. Activate virtual env: if you are not using pycharm or visual studio activate venv manually
+2. Download bioSentvec model from: https://ftp.ncbi.nlm.nih.gov/pub/lu/Suppl/BioSentVec/BioSentVec_PubMed_MIMICIII-bigram_d700.bin
+   load it in /models.
+
+3. Activate virtual env: if you are not using pycharm or visual studio activate venv manually
     ```bash
     python -m venv venv
    source venv/bin/activate
     ```
 
-3. Install the required dependencies:
+4. Install the required dependencies:
 
     ```bash
     pip install -r requirements.txt
