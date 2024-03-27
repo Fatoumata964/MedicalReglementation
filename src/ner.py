@@ -64,7 +64,7 @@ def train(df):
     embedding_DIS = np.vstack(df1['Diseases_emb'].values)
     embedding_matrix = np.hstack((embedding_DIS, embedding_subs))  
     # Chargement du modèle de clustering pré-entraîné
-    with open("/content/drive/MyDrive/stage/hh/MedicalReglementation/models/clustering_model.pkl", 'rb') as f:
+    with open("./models/clustering_model.pkl", 'rb') as f:
         kmeans = pickle.load(f)
     # Entraînement du modèle de clustering sur la matrice d'embedding
     kmeans.fit(embedding_matrix)

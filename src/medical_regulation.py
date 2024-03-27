@@ -15,14 +15,14 @@ import sent2vec
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
-df = pd.read_csv("/content/drive/MyDrive/stage/hh/MedicalReglementation/data/processed/dataEMAfr.csv")
+df = pd.read_csv("./data/processed/dataEMAfr.csv")
 mistral_llm = llm()
 
 # Initialisation du modèle Sent2Vec
 model = sent2vec.Sent2vecModel()
 try:
       # Chargement du modèle depuis le chemin spécifié
-        model.load_model("/content/drive/MyDrive/stage/hh/MedicalReglementation/models/biosentvec.crdownload")
+        model.load_model("./models/biosentvec.crdownload")
 except Exception as e:
       # Gestion des erreurs lors du chargement du modèle
       print(e)
@@ -50,7 +50,7 @@ def extract_regulation(drug):
     print("Drug embedded")
     
     # Chargement du modèle de clustering à partir du fichier pickle
-    with open("/content/drive/MyDrive/stage/hh/MedicalReglementation/models/clustering_model.pkl", 'rb') as f:
+    with open("./models/clustering_model.pkl", 'rb') as f:
         kmeans = pickle.load(f)
     
     # Prédiction du cluster auquel appartient le médicament
