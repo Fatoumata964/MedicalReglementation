@@ -72,22 +72,26 @@ def extract_regulation(drug):
     
     # Ajout d'informations supplémentaires en fonction du cluster prédit
     if y == 0:
-      prompt += ''' Les medicaments dans ce groupe traite le plus souvent les types de cancer seins et poumons et l'infarctus myocarde.
-      Pour les medicaments traitant le cancer, veille a montré le bénéfice significatif qu'il apporte aux patients en termes de survie, de qualité de vie ou d'autres critères pertinents.
-      Ils doivent obligatoirement obtenir une autorisation de mise sur le marché, verifie le statut d'autorisation dans le contexte pour cela.
-      La réglementation d'un médicament contre l'infarctus du myocarde doit tenir compte des caractéristiques spécifiques du médicament et de la population de patients qu'il est censé traiter.'''
+      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent les types de cancer, en particulier les cancers du sein et des poumons, ainsi que les fractures. 
+      Pour les médicaments traitant le cancer, la veille a montré le bénéfice significatif qu'ils apportent aux patients en termes de survie, de qualité de vie ou d'autres critères pertinents. 
+      Ils doivent obligatoirement obtenir une autorisation de mise sur le marché. Vérifiez le statut d'autorisation dans le contexte pour cela. '''
     elif y == 1:
-      prompt += ''' Les medicaments dans ce groupe traite le plus souvent les infections et fibrose. Veille a sensibiliser le patient à l'importance de l'utilisation rationnelle des antibiotiques.
-      Pour les medicaments contre la fibrose, ils doivent avoir un profil de sécurité acceptable. '''
+      prompt += ''' Les médicaments dans ce groupe sont principalement destinés au traitement des infections et de la fibrose. Il est essentiel de sensibiliser le patient à l'importance 
+      de l'utilisation rationnelle des antibiotiques pour lutter contre les infections. De plus, pour les médicaments visant à traiter la fibrose, il est crucial qu'ils présentent un 
+      profil de sécurité acceptable, garantissant ainsi la santé et le bien-être des patients. '''
     elif y == 2:
-      prompt += ''' Les medicaments dans ce groupe traite le plus souvent l'hypertension et l'insuffisance renale. Les médicaments contre l'hypertension doivent être sûrs et efficaces pour les populations à risque,
-      telles que les personnes âgées, les personnes souffrant d'autres maladies et les femmes enceintes ou allaitantes. Pour les médicaments contre l'insuffisance renale, informer les patients de l'importance de
-      la surveillance de la fonction rénale pendant le traitement'''
+      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent l'hypertension essentielle et l'insuffisance rénale. Les médicaments contre l'hypertension doivent être 
+      sûrs et efficaces pour les populations à risque, telles que les personnes âgées, les personnes souffrant d'autres maladies et les femmes enceintes ou allaitantes. 
+      Pour les médicaments contre l'insuffisance rénale, il est crucial d'informer les patients de l'importance de la surveillance de la fonction rénale pendant le traitement, afin de garantir des résultats optimaux. '''
     else :
-      prompt += ''' Les medicaments dans ce groupe traite le plus souvent les cancers, psoriasis et maladie parkinson. Les effets indésirables pour les medicaments contre le psoriasis doivent être bien documentés
-      et gérés de manière appropriée. La réglementation des médicaments contre la maladie de Parkinson doit tenir compte des caractéristiques spécifiques de la maladie, telles que:
-      la progression progressive de la maladie et la variabilité des symptômes d'un patient à l'autre'''
-
+      prompt += ''' 'Les médicaments dans ce groupe sont principalement utilisés pour le traitement des cancers, notamment chez les adultes atteints. La réglementation des médicaments 
+      contre le cancer doit prendre en compte la complexité de la maladie, ses différentes formes et ses stades de progression. De plus, les effets indésirables associés aux traitements 
+      contre le cancer doivent être rigoureusement documentés et gérés de manière appropriée pour assurer la sécurité des patients. En parallèle, les soins des patients atteints de maladies 
+      telles que le psoriasis nécessitent une attention particulière. Il est crucial de surveiller de près les effets indésirables des médicaments utilisés pour traiter le psoriasis, 
+      car ils peuvent avoir un impact significatif sur la qualité de vie des patients. De même, la réglementation des médicaments contre la maladie de Parkinson doit être adaptée aux caractéristiques
+       uniques de cette maladie neurodégénérative, telles que la progression progressive de la maladie et la variabilité des symptômes d'un patient à l'autre. Il est essentiel que les traitements disponibles 
+       pour la maladie de Parkinson soient efficaces et sûrs, permettant ainsi d'améliorer la qualité de vie des patients et de leur offrir un soulagement optimal des symptômes.'''
+          
     prompt += '''
     Assures-toi d'inclure explicitement le Statut d'autorisation, la Date de révision, les dosages recommandés, les incompatibilités, les mises en garde spéciales et précautions d'emploi, ainsi que les contre-indications et l'URL vers le site EMA du medicament en te basant sur le context donné, sans donner d'informaions sur les médicaments ci-dessus.
 
