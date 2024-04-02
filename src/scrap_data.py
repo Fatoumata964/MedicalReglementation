@@ -117,4 +117,4 @@ def data_from_EMA(path):
 if __name__ == "__main__":
   path = "./data/interim/medicines_output_european_public_assessment_reports_en.xlsx"
   df = data_from_EMA(path)
-  df.head()
+  print(df.head())
