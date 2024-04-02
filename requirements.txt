@@ -11,3 +11,6 @@ faiss-cpu
 huggingface_hub
 langchain
 sentence_transformers
+selenium
+chromedriver-autoinstaller
+tqdm
