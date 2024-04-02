@@ -112,7 +112,7 @@ def data_from_EMA(path):
     ndf = pd.merge(df, df2, left_on='name', right_on='Medicine name', how='outer')
 
     # Save the processed DataFrame to a CSV file
-    ndf.to_csv('/content/drive/MyDrive/stage/hh/Medical_Reglementation/data/raw/data_scraped.csv', index=False)
+    ndf.to_csv('./data/raw/data_scraped.csv', index=False)
     return ndf
 if __name__ == "__main__":
   path = "./data/interim/medicines_output_european_public_assessment_reports_en.xlsx"
