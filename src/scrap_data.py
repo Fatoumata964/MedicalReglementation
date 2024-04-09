@@ -5,29 +5,17 @@ output
 -> data/interim : table.csv (provessed csv file of drugs-
 -> data/raw: some pdf text related to reglementation of drugs of one cluster that we'll use as examples
 '''
-import sys
-sys.path.insert(0,'/usr/lib/chromium-browser/chromedriver')
-
 import time
 import pandas as pd
 import numpy as np
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-import chromedriver_autoinstaller
 from tqdm import tqdm
-
-# setup chrome options
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless') # ensure GUI is off
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-
-# set path to chromedriver as per your configuration
-chromedriver_autoinstaller.install()
-
-# set up the webdriver
-driver = webdriver.Chrome(options=chrome_options)
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+service = Service(executable_path='./chromedriver.exe')
+options = webdriver.ChromeOptions()
+driver = webdriver.Chrome(service=service, options=options)
 
 def urls_opendata(path):
     # Read the Excel file into a Pandas DataFrame
