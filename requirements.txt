@@ -12,5 +12,7 @@ huggingface_hub
 langchain
 sentence_transformers
 selenium
-chromedriver-autoinstaller
+chromedriver
 tqdm
+pandas
+openpyxl
