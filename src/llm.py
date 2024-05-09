@@ -10,7 +10,7 @@ def llm():
     # Création d'une instance de la classe HuggingFaceHub avec les paramètres spécifiés
     llm_model = HuggingFaceHub(
         repo_id='mistralai/Mixtral-8x7B-Instruct-v0.1',  # Identifiant du dépôt du modèle
-        model_kwargs={'max_length': 700, 'temperature': 0.1}  # Arguments du modèle (longueur maximale et température)
+        model_kwargs={'max_length': 700, 'temperature': 0.1, 'return_full_text':False}  # Arguments du modèle (longueur maximale et température)
     )
     # Retour de l'instance du modèle de langage mixte créée
     return llm_model
