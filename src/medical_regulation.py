@@ -22,7 +22,7 @@ mistral_llm = llm()
 model = sent2vec.Sent2vecModel()
 try:
       # Chargement du modèle depuis le chemin spécifié
-        model.load_model("./models/biosentvec.crdownload")
+        model.load_model("/content/drive/MyDrive/stage/hh/Medical_Reglementation/models/biosentvec.crdownload")
 except Exception as e:
       # Gestion des erreurs lors du chargement du modèle
       print(e)
@@ -70,39 +70,56 @@ def extract_regulation(drug):
         med += drug_info["Date de révision"] + ' ' + drug_info["Statut d'autorisation"] + ' ' + drug_info["Espace thérapeutique"] + ' ' + drug_info["État/indication"] + ' ' + drug_info["usage_df1"] + ' ' + drug_info["risque"] + ' ' + drug_info["URL"]
     prompt += med
     
-    # Ajout d'informations supplémentaires en fonction du cluster prédit
-    if y == 0:
-      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent les types de cancer, en particulier les cancers du sein et des poumons, ainsi que les fractures. 
-      Pour les médicaments traitant le cancer, la veille a montré le bénéfice significatif qu'ils apportent aux patients en termes de survie, de qualité de vie ou d'autres critères pertinents. 
-      Ils doivent obligatoirement obtenir une autorisation de mise sur le marché. Vérifiez le statut d'autorisation dans le contexte pour cela. '''
-    elif y == 1:
-      prompt += ''' Les médicaments dans ce groupe sont principalement destinés au traitement des infections et de la fibrose. Il est essentiel de sensibiliser le patient à l'importance 
-      de l'utilisation rationnelle des antibiotiques pour lutter contre les infections. De plus, pour les médicaments visant à traiter la fibrose, il est crucial qu'ils présentent un 
-      profil de sécurité acceptable, garantissant ainsi la santé et le bien-être des patients. '''
-    elif y == 2:
-      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent l'hypertension essentielle et l'insuffisance rénale. Les médicaments contre l'hypertension doivent être 
-      sûrs et efficaces pour les populations à risque, telles que les personnes âgées, les personnes souffrant d'autres maladies et les femmes enceintes ou allaitantes. 
-      Pour les médicaments contre l'insuffisance rénale, il est crucial d'informer les patients de l'importance de la surveillance de la fonction rénale pendant le traitement, afin de garantir des résultats optimaux. '''
-    else :
-      prompt += ''' 'Les médicaments dans ce groupe sont principalement utilisés pour le traitement des cancers, notamment chez les adultes atteints. La réglementation des médicaments 
-      contre le cancer doit prendre en compte la complexité de la maladie, ses différentes formes et ses stades de progression. De plus, les effets indésirables associés aux traitements 
-      contre le cancer doivent être rigoureusement documentés et gérés de manière appropriée pour assurer la sécurité des patients. En parallèle, les soins des patients atteints de maladies 
-      telles que le psoriasis nécessitent une attention particulière. Il est crucial de surveiller de près les effets indésirables des médicaments utilisés pour traiter le psoriasis, 
-      car ils peuvent avoir un impact significatif sur la qualité de vie des patients. De même, la réglementation des médicaments contre la maladie de Parkinson doit être adaptée aux caractéristiques
-       uniques de cette maladie neurodégénérative, telles que la progression progressive de la maladie et la variabilité des symptômes d'un patient à l'autre. Il est essentiel que les traitements disponibles 
-       pour la maladie de Parkinson soient efficaces et sûrs, permettant ainsi d'améliorer la qualité de vie des patients et de leur offrir un soulagement optimal des symptômes.'''
-          
-    prompt += '''
-    Assures-toi d'inclure explicitement le Statut d'autorisation, la Date de révision, les dosages recommandés, les incompatibilités, les mises en garde spéciales et précautions d'emploi, ainsi que les contre-indications et l'URL vers le site EMA du medicament en te basant sur le context donné, sans donner d'informaions sur les médicaments ci-dessus.
+    prompt += '''Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour un médicament donné en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation de L'\aflibercept en France, ne parles que de L'aflibercept . En suivant la sructure suivante, remplace drug par aflibercept :
+        f"## Donne l'Encadré pour la notice de {drug}",
+        f"## Que contient cette notice ?",
+        f"## Qu'est-ce que {drug} et comment l'utiliser ?",
+        f"## Quelles sont les informations à connaître avant de prendre {drug} ?",
+        f"## Comment prendre {drug} ?",
+        f"## Quels sont les effets indésirables éventuels de {drug} ?",
+        f"## Comment conserver {drug} ?",
+        f"## Contenu de l'emballage et autres informations concernant {drug}".
+        
+       Utilise l'exemple suivant comme guide: 
 
-    Contexte:
-    {similar_medications_in_cluster, df}
+        Nom du médicament
+        PARACÉTAMOL 500 mg, comprimé
 
-     Le format de sortie doit être en Markdown :
-     Le titre principal doit commencer par #.
-     Les sous-titres doivent commencer par ##.
-     Les listes doivent commencer par *.
-     '''
+        Composition qualitative et quantitative
+        Chaque comprimé contient 500 mg de paracétamol.
+
+        Forme pharmaceutique
+        Comprimé.
+
+        Classe thérapeutique
+        Médicament analgésique et antipyrétique.
+
+        Indications thérapeutiques
+        Traitement symptomatique de la fièvre et des douleurs d'intensité légère à modérée, telles que les maux de tête, les douleurs dentaires, les douleurs musculaires, les règles douloureuses et les symptômes du rhume et de la grippe.
+
+        Posologie et mode d'administration
+        La posologie recommandée pour les adultes et les enfants de plus de 12 ans est de 1 à 2 comprimés par prise, à renouveler si nécessaire toutes les 4 à 6 heures. Ne pas dépasser 8 comprimés par jour.
+
+        Que contient cette notice ?
+        Cette notice contient des informations importantes sur l'utilisation sûre et efficace du médicament PARACÉTAMOL. Il est essentiel de lire attentivement cette notice avant d'utiliser ce médicament et de suivre les instructions fournies par votre médecin ou votre professionnel de la santé.
+
+        Qu'est-ce que le paracétamol et comment l'utiliser ?
+        Le paracétamol est un médicament utilisé pour traiter la fièvre et les douleurs légères à modérées. Il agit en réduisant la production de substances dans le cerveau qui provoquent la fièvre et la douleur. Le paracétamol est pris par voie orale sous forme de comprimés, à avaler avec un verre d'eau.
+
+        Quelles sont les informations à connaître avant de prendre le paracétamol ?
+        Avant de prendre le paracétamol, informez votre médecin si vous avez des antécédents de problèmes hépatiques, de consommation excessive d'alcool ou si vous prenez d'autres médicaments, en particulier des médicaments contenant du paracétamol ou des anticoagulants. Ne dépassez pas la dose recommandée et ne prenez pas ce médicament pendant une période prolongée sans avis médical.
+
+        Comment prendre le paracétamol ?
+        Le paracétamol doit être pris par voie orale avec un verre d'eau. Respectez la posologie recommandée et ne dépassez pas la dose maximale recommandée. Ne prenez pas ce médicament plus longtemps que prescrit sans consulter votre médecin.
+
+        Quels sont les effets indésirables éventuels du paracétamol ?
+        Les effets indésirables les plus courants du paracétamol comprennent les réactions allergiques, les nausées, les vomissements et les éruptions cutanées. Des effets indésirables plus graves, tels que les lésions hépatiques, peuvent également survenir en cas de surdosage. Contactez immédiatement votre médecin si vous ressentez des effets indésirables graves.
+
+        Comment conserver le paracétamol ?
+        Conservez le paracétamol dans un endroit sec à une température inférieure à 25°C. Gardez-le hors de la portée des enfants et des animaux domestiques. Ne pas utiliser ce médicament après la date de péremption indiquée sur l'emballage.
+
+        Contenu de l'emballage et autres informations concernant le paracétamol
+        Chaque boîte contient un nombre déterminé de comprimés de paracétamol. Ne pas utiliser ce médicament si l'emballage est endommagé ou si le médicament a changé de couleur ou d'odeur. Consultez votre pharmacien pour plus d'informations sur le stockage et l'utilisation sûre de ce médicament.'''
 
     # Découpage du prompt en chunks pour respecter la limite de longueur
     max_length = 512
