@@ -57,11 +57,8 @@ def extract_regulation(drug):
     y = kmeans.predict(embedding_mat)
     print(y)
     
-    # Création d'une liste de données textuelles pour la recherche de médicaments similaires
-    text_data = new_df['Substance active'] + ' ' + new_df['Espace thérapeutique'] + ' ' + new_df["Statut d'autorisation"] + ' ' + new_df['usage_df1'] + ' ' + new_df['risque']
-    
     # Recherche de médicaments similaires dans le même cluster
-    similar_medications_in_cluster = faiss_search_similar_medications(drug, y, text_data, new_df, 10)
+    similar_medications_in_cluster = faiss_search_similar_medications(drug, y, new_df, 10)
     
     # Construction du prompt pour la génération de la réglementation
     prompt = f'[INST] Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour un médicament donné en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation du {drug} en France, ne parles que du {drug} ,en te basant sur les médicaments suivants :'
