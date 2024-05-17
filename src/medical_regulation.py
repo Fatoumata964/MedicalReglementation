@@ -12,6 +12,8 @@ import os
 import pandas as pd
 import numpy as np
 import sent2vec
+from langchain.prompts.few_shot import FewShotPromptTemplate
+from langchain.prompts.prompt import PromptTemplate
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
@@ -38,86 +40,74 @@ def extract_regulation(drug):
     # Entraînement d'un nouveau DataFrame pour le clustering
     new_df = train(df)
     print(new_df[0:1])
-    
+
     # Intégration du texte du médicament et d'une phrase représentative de la maladie
     embedded_drug = model.embed_sentence(drug)
     disease = new_df["Diseases"][new_df["Substance active"] == drug].iloc[0]
     embedded_disease = model.embed_sentence(str(disease))
-    
+
     # Création de la matrice d'embedding en concaténant les embeddings du médicament et de la maladie
     embedding_mat = np.hstack((embedded_disease, embedded_drug))
-    
+
     print("Drug embedded")
-    
+
     # Chargement du modèle de clustering à partir du fichier pickle
     with open("./models/clustering_model.pkl", 'rb') as f:
         kmeans = pickle.load(f)
-    
+
     # Prédiction du cluster auquel appartient le médicament
     y = kmeans.predict(embedding_mat)
     print(y)
-    
+
     # Recherche de médicaments similaires dans le même cluster
     similar_medications_in_cluster = faiss_search_similar_medications(drug, y, new_df, 10)
-    
+
     # Construction du prompt pour la génération de la réglementation
-    prompt = f'[INST] Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour un médicament donné en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation du {drug} en France, ne parles que du {drug} ,en te basant sur les médicaments suivants :'
-    med = ''
+    context = 'Voici des informations pour créer la reglementation de {drug}: '
     for drug_info in similar_medications_in_cluster:
-        med += drug_info["Date de révision"] + ' ' + drug_info["Statut d'autorisation"] + ' ' + drug_info["Espace thérapeutique"] + ' ' + drug_info["État/indication"] + ' ' + drug_info["usage_df1"] + ' ' + drug_info["risque"] + ' ' + drug_info["URL"]
-    prompt += med
-    
-    prompt += '''Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour un médicament donné en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation de L'\aflibercept en France, ne parles que de L'aflibercept . En suivant la sructure suivante, remplace drug par aflibercept :
-        f"## Donne l'Encadré pour la notice de {drug}",
-        f"## Que contient cette notice ?",
-        f"## Qu'est-ce que {drug} et comment l'utiliser ?",
-        f"## Quelles sont les informations à connaître avant de prendre {drug} ?",
-        f"## Comment prendre {drug} ?",
-        f"## Quels sont les effets indésirables éventuels de {drug} ?",
-        f"## Comment conserver {drug} ?",
-        f"## Contenu de l'emballage et autres informations concernant {drug}".
-        
-       Utilise l'exemple suivant comme guide: 
+        context += drug_info["Date de révision"] + ' ' + drug_info["Statut d'autorisation"] + ' ' + drug_info["Espace thérapeutique"] + ' ' + drug_info["État/indication"] + ' ' + drug_info["usage_df1"] + ' ' + drug_info["risque"] + ' ' + drug_info["URL"]
 
-        Nom du médicament
-        PARACÉTAMOL 500 mg, comprimé
 
-        Composition qualitative et quantitative
-        Chaque comprimé contient 500 mg de paracétamol.
+    example= [{"context": "",
+           "drug": drug,
+           "encadre": " Veuillez lire attentivement cette notice avant de prendre ce médicament car elle contient des informations importantes pour vous. Vous devez toujours prendre ce médicament en suivant scrupuleusement les informations fournies dans cette notice ou par votre médecin ou votre pharmacien. · Gardez cette notice. Vous pourriez avoir besoin de la relire. · Adressez-vous à votre pharmacien pour tout conseil ou information. · Si vous ressentez un quelconque effet indésirable, parlez-en à votre médecin ou votre pharmacien. Ceci s’applique aussi à tout effet indésirable qui ne serait pas mentionné dans cette notice. Voir rubrique 4.· Vous devez vous adresser à votre médecin si vous ne ressentez aucune amélioration ou si vous vous sentez moins bien.",
+           "contenu": "1. Qu'est-ce que {drug} et dans quels cas est-il utilisé ? \n 2. Quelles sont les informations à connaître avant de prendre {drug}? \n 3. Comment prendre {drug}? \n 4. Quels sont les effets indésirables éventuels ?\n 5. Comment conserver {drug} ? \n 6. Contenu de l’emballage et autres informations.",
+           "utilite": "Classe pharmacothérapeutique - code ATC : Autres préparations à usage systémique, D10BX (D : Dermatologie). Ce médicament contient du {drug}. Ce médicament est indiqué dans : · Acné inflammatoire de sévérité mineure et moyenne, · Acrodermatite entéropathique.",
+           "information": "Ne prenez jamais {drug} : · si vous êtes allergique (hypersensible) au gluconate de {drug} ou à l’un des autres composants contenus dans ce médicament, mentionnés dans la rubrique 6. Avertissements et précautions Adressez-vous à votre médecin ou à votre pharmacien avant de prendre {drug} gélule. Les gélules doivent être prises avec un grand verre d’eau et en position assise afin de limiter le risque de troubles digestifs. La position allongée est à éviter pendant les 30 minutes suivant la prise des gélules.",
+           "posologie": "Veillez à toujours prendre ce médicament en suivant exactement les instructions de cette notice ou les indications de votre médecin ou de votre pharmacien. Vérifiez auprès de votre médecin ou de votre pharmacien en cas de doute. Posologie\n A prendre à distance des repas, car le bol alimentaire peut modifier l'absorption du médicament. Acné : La posologie recommandée est de 2 gélules par jour en une seule prise le matin à distance des repas avec un grand verre d'eau.",
+           "effet_sec": "Comme tous les médicaments, ce médicament peut provoquer des effets indésirables, mais ils ne surviennent pas systématiquement chez tout le monde. Les effets indésirables suivants ont été rapportés : Rarement (survenant chez moins de 1 patient sur 1 000) : Au cours du traitement, il est possible que surviennent des douleurs de l'estomac et du ventre ; elles sont habituellement de faible intensité et transitoire, ainsi que des nausées, vomissements, constipations ou diarrhées. Très rarement (survenant chez moins de 1 patient sur 10 000) :",
+           "conservation": "Tenir ce médicament hors de la vue et de la portée des enfants. N’utilisez pas ce médicament après la date de péremption indiquée sur l’emballage après EXP. La date de péremption fait référence au dernier jour de ce mois. Pas de précautions particulières de conservation.",
+           "emballage": "Ce que contient {drug}  Retour en haut de la page· La substance active est : {drug}................................................................................................................................. 15,00 mg Sous forme de gluconate de {drug}..................................................................................... 104,55 mg. Qu’est-ce que {drug} et contenu de l’emballage extérieur. Titulaire de l’autorisation de mise sur le marché  Retour en haut de la page LABCATAL 1198 AVENUE DU DOCTEUR MAURICE DONAT. Exploitant de l’autorisation de mise sur le marché  Retour en haut de la page LABORATOIRE DES GRANIONS. Fabricant LABCATAL. Noms du médicament dans les Etats membres de l'Espace Economique Européen. La dernière date à laquelle cette notice a été révisée est :"
 
-        Forme pharmaceutique
-        Comprimé.
+    }]
 
-        Classe thérapeutique
-        Médicament analgésique et antipyrétique.
+    example_prompt = PromptTemplate(
+        input_variables = ["context", "drug", "encadre", "contenu", "utilite", "information", "posologie", "effet_sec", "conservation", "emballage"],
+        template = """
+    Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour {drug} en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation du {drug} en France, NE parles QUE du {drug} . En utilisant le contexte suivant:
 
-        Indications thérapeutiques
-        Traitement symptomatique de la fièvre et des douleurs d'intensité légère à modérée, telles que les maux de tête, les douleurs dentaires, les douleurs musculaires, les règles douloureuses et les symptômes du rhume et de la grippe.
+    Context: {context}
+    Respecte la structure suivante :
+            ## Encadré \n {encadre}\n  ,
+            ## Que contient cette notice ? \n{contenu} \n ,
+            1- Qu'est-ce que {drug} et comment l'utiliser ? \n{utilite} \n ,
+            2- Quelles sont les informations à connaître avant de prendre {drug} ? \n{information}\n ,
+            3- Comment prendre {drug} ? \n {posologie}\n ,
+            4- Quels sont les effets indésirables éventuels de {drug} \n ?{effet_sec}\n ,
+            5- Comment conserver {drug} ?\n {conservation}?\n ,
+            6- Contenu de l'emballage et autres informations concernant {drug} \n {emballage}
+    """
+    )
 
-        Posologie et mode d'administration
-        La posologie recommandée pour les adultes et les enfants de plus de 12 ans est de 1 à 2 comprimés par prise, à renouveler si nécessaire toutes les 4 à 6 heures. Ne pas dépasser 8 comprimés par jour.
-
-        Que contient cette notice ?
-        Cette notice contient des informations importantes sur l'utilisation sûre et efficace du médicament PARACÉTAMOL. Il est essentiel de lire attentivement cette notice avant d'utiliser ce médicament et de suivre les instructions fournies par votre médecin ou votre professionnel de la santé.
-
-        Qu'est-ce que le paracétamol et comment l'utiliser ?
-        Le paracétamol est un médicament utilisé pour traiter la fièvre et les douleurs légères à modérées. Il agit en réduisant la production de substances dans le cerveau qui provoquent la fièvre et la douleur. Le paracétamol est pris par voie orale sous forme de comprimés, à avaler avec un verre d'eau.
-
-        Quelles sont les informations à connaître avant de prendre le paracétamol ?
-        Avant de prendre le paracétamol, informez votre médecin si vous avez des antécédents de problèmes hépatiques, de consommation excessive d'alcool ou si vous prenez d'autres médicaments, en particulier des médicaments contenant du paracétamol ou des anticoagulants. Ne dépassez pas la dose recommandée et ne prenez pas ce médicament pendant une période prolongée sans avis médical.
-
-        Comment prendre le paracétamol ?
-        Le paracétamol doit être pris par voie orale avec un verre d'eau. Respectez la posologie recommandée et ne dépassez pas la dose maximale recommandée. Ne prenez pas ce médicament plus longtemps que prescrit sans consulter votre médecin.
-
-        Quels sont les effets indésirables éventuels du paracétamol ?
-        Les effets indésirables les plus courants du paracétamol comprennent les réactions allergiques, les nausées, les vomissements et les éruptions cutanées. Des effets indésirables plus graves, tels que les lésions hépatiques, peuvent également survenir en cas de surdosage. Contactez immédiatement votre médecin si vous ressentez des effets indésirables graves.
-
-        Comment conserver le paracétamol ?
-        Conservez le paracétamol dans un endroit sec à une température inférieure à 25°C. Gardez-le hors de la portée des enfants et des animaux domestiques. Ne pas utiliser ce médicament après la date de péremption indiquée sur l'emballage.
-
-        Contenu de l'emballage et autres informations concernant le paracétamol
-        Chaque boîte contient un nombre déterminé de comprimés de paracétamol. Ne pas utiliser ce médicament si l'emballage est endommagé ou si le médicament a changé de couleur ou d'odeur. Consultez votre pharmacien pour plus d'informations sur le stockage et l'utilisation sûre de ce médicament.'''
-
+    # Create the FewshotPromptTemplate
+    prompt_template = FewShotPromptTemplate(
+        examples=example,
+        example_prompt=example_prompt,
+        prefix="Voici un exemple d'utilisation correcte:",
+        suffix="Notice de: {drug}",
+        input_variables=["drug"]
+    )
+    prompt = prompt_template.format(drug=drug)
     # Découpage du prompt en chunks pour respecter la limite de longueur
     max_length = 512
     prompt_chunks = [prompt[i:i+max_length] for i in range(0, len(prompt), max_length)]
@@ -130,9 +120,9 @@ def extract_regulation(drug):
 
     generated_text = ''.join(generated_text_chunks)
     generated_text = '\n'.join([p for p in generated_text.split('\n')[1:] if len(p) > 0])
-
+    cleaned_text = ' '.join(generated_text.split())
     # Retour du texte généré
-    return generated_text
+    return cleaned_text
     
 @app.get('/')
 def index():
