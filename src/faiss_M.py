@@ -38,7 +38,7 @@ def indexation(df):
 # Fonction pour rechercher des médicaments similaires à un médicament donné à l'aide de l'index FAISS
 def faiss_search_similar_medications(subs, predicted_cluster, df, k):
     # Appeler la fonction d'indexation pour créer l'index FAISS
-    faiss_index, drug_to_index_map, X = indexation(df)
+    faiss_index, drug_to_index_map, X = indexation(df[df["predicted_cluster"] == predicted_cluster])
     drugname = df["Nom du médicament"][df["Substance active"] == subs].iloc[0]
     
     # Obtenir l'index du médicament spécifié dans l'index FAISS
@@ -50,16 +50,10 @@ def faiss_search_similar_medications(subs, predicted_cluster, df, k):
     # Initialiser une liste pour stocker les médicaments similaires
     similar_medications = []
   
-    # Parcourir les indices des médicaments similaires et leurs clusters prédits
-    for neighbor_index, neighbor_cluster in zip(I[0], predicted_cluster):
-
-        # Récupérer les informations sur le médicament voisin
+    # Parcourir les indices des médicaments similaires
+    for neighbor_index  in I[0]:
         similar_medication_info = df.iloc[neighbor_index]
-
-        # Vérifier si le cluster du médicament voisin correspond au cluster prédit
-        if neighbor_cluster == predicted_cluster:
-            # Ajouter les informations sur le médicament voisin à la liste des médicaments similaires
-            similar_medications.append(similar_medication_info)
+        similar_medications.append(similar_medication_info)
     
     # Retourner la liste des médicaments similaires
     return similar_medications
