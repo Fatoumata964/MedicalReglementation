@@ -60,13 +60,15 @@ def extract_regulation(drug):
     print(y)
 
     # Recherche de médicaments similaires dans le même cluster
-    similar_medications_in_cluster = faiss_search_similar_medications(drug, y, new_df, 10)
+    df_clus = new_df[new_df['cluster_labels'] == y[0]]
+    # Recherche de médicaments similaires dans le même cluster
+    similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 10)
+    print(similar_medications_in_cluster)
 
     # Construction du prompt pour la génération de la réglementation
     context = 'Voici des informations pour créer la reglementation de {drug}: '
-    for drug_info in similar_medications_in_cluster:
-        context += drug_info["Date de révision"] + ' ' + drug_info["Statut d'autorisation"] + ' ' + drug_info["Espace thérapeutique"] + ' ' + drug_info["État/indication"] + ' ' + drug_info["usage_df1"] + ' ' + drug_info["risque"] + ' ' + drug_info["URL"]
-
+    med = similar_medications_in_cluster[['Substance active', 'Espace thérapeutique', "Statut d'autorisation", 'usage_df1', 'risque']].to_string(index=False)
+    context += med
 
     example= [{"context": "",
            "drug": drug,
