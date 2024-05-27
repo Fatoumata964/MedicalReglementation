@@ -14,7 +14,7 @@ import sent2vec
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
-df = pd.read_csv("./data/processed/dataEMAfr.csv")
+df = pd.read_csv("./data/processed/data_cluster.csv")
 mistral_llm = llm()
 
 # Initialisation du modèle Sent2Vec
@@ -34,13 +34,11 @@ class TextInput(BaseModel):
 def extract_regulation(drug):
     '''Extraction de la réglementation du médicament donné'''
 
-    # Entraînement d'un nouveau DataFrame pour le clustering
-    new_df = train(df)
-    print(new_df[0:1])
+    print(df[0:1])
     
     # Intégration du texte du médicament et d'une phrase représentative de la maladie
     embedded_drug = model.embed_sentence(drug)
-    disease = new_df["Diseases"][new_df["Substance active"] == drug].iloc[0]
+    disease = df["Diseases"][df["Substance active"] == drug].iloc[0]
     embedded_disease = model.embed_sentence(str(disease))
     
     # Création de la matrice d'embedding en concaténant les embeddings du médicament et de la maladie
@@ -57,7 +55,7 @@ def extract_regulation(drug):
     print(y)
     
     # Recherche de médicaments similaires dans le même cluster
-    df_clus = new_df[new_df['cluster_labels'] == y[0]]
+    df_clus = df[df['cluster_labels'] == y[0]]
     # Recherche de médicaments similaires dans le même cluster
     similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 10)
     print(similar_medications_in_cluster)
@@ -113,7 +111,7 @@ async def get_regulation(drug: TextInput):
     # You can perform text processing here
     start_time = time.time()
     print(drug)
-    regulation_text = extract_regulation(drug.text)
+    regulation_text = extract_regulation(drug.text.lower())
     # stopping the timer
     stop_time = time.time()
     elapsed_time = stop_time - start_time
