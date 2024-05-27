@@ -3,10 +3,10 @@ import uvicorn
 from colabcode import ColabCode
 from fastapi import FastAPI
 from pydantic import BaseModel
-from faiss_M import *
+from faiss_M import faiss_search_similar_medications
 from bioSentVec import *
-from llm import *
-from ner import *
+from llm import mistral_llm
+from ner import train
 import pickle
 import os
 import pandas as pd
