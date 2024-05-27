@@ -16,7 +16,7 @@ from langchain.prompts.prompt import PromptTemplate
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
-df = pd.read_csv("./data/processed/dataEMAfr.csv")
+df = pd.read_csv("./data/processed/data_cluster.csv")
 mistral_llm = llm()
 
 # Initialisation du modèle Sent2Vec
