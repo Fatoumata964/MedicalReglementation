@@ -4,7 +4,7 @@ from colabcode import ColabCode
 from fastapi import FastAPI
 from pydantic import BaseModel
 from faiss_M import faiss_search_similar_medications
-from llm import mistral_llm
+from llm import llm
 from ner import train
 import pickle
 import os
