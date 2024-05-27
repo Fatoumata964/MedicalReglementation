@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from faiss_M import faiss_search_similar_medications
 from llm import llm
 from ner import train
+from utils import process
 import pickle
 import os
 import pandas as pd
@@ -33,7 +34,7 @@ class TextInput(BaseModel):
 
 def extract_regulation(drug):
     '''Extraction de la réglementation du médicament donné'''
-
+    drug = process(drug)
     print(df[0:1])
     
     # Intégration du texte du médicament et d'une phrase représentative de la maladie
