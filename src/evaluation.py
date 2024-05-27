@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import CrossEncoder
-from medical_regulation import *
+from medical_regulation import extract_regulation
 modelf = CrossEncoder("vectara/hallucination_evaluation_model")
 
 
