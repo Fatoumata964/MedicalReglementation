@@ -4,7 +4,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk import word_tokenize
 from string import punctuation
-from bioSentVec import *
+from bioSentVec import embed_disease
 import pickle
 import numpy as np
 
