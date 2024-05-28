@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from faiss_M import faiss_search_similar_medications
 from llm import llm
-from ner import train
 from utils import process
 import pickle
 import os
