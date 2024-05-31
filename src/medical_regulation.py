@@ -11,17 +11,18 @@ import os
 import pandas as pd
 import numpy as np
 import sent2vec
+from concurrent.futures import ThreadPoolExecutor
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
 df = pd.read_csv("./data/processed/data_cluster.csv")
-mistral_llm = llm()
+#mistral_llm = llm()
 
 # Initialisation du modèle Sent2Vec
 model = sent2vec.Sent2vecModel()
 try:
       # Chargement du modèle depuis le chemin spécifié
-        model.load_model("./models/biosentvec.crdownload")
+        model.load_model("/content/drive/MyDrive/stage/hh/Medical_Reglementation/models/biosentvec.crdownload")
 except Exception as e:
       # Gestion des erreurs lors du chargement du modèle
       print(e)
@@ -61,60 +62,42 @@ def extract_regulation(drug):
     print(similar_medications_in_cluster)
 
     # Construction du prompt pour la génération de la réglementation
+    
     prompt = f'[INST] Tu es un assistant médical, un assistant aimable et utile. Ton rôle est de donner une réglementation pour un médicament donné en te basant sur les donnees fournis. Sois le plus précis et fiable possible. Crée une réglementation détaillée pour l\'utilisation du {drug} en France, ne parles que du {drug} ,en te basant sur les médicaments suivants :'
     
     med = similar_medications_in_cluster[['Substance active', 'Espace thérapeutique', "Statut d'autorisation", 'usage_df1', 'risque']].to_string(index=False)
     prompt += med
     
-    # Ajout d'informations supplémentaires en fonction du cluster prédit
-    if y == 0:
-      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent les types de cancer, en particulier les cancers du sein et des poumons, ainsi que les fractures. 
-      Pour les médicaments traitant le cancer, la veille a montré le bénéfice significatif qu'ils apportent aux patients en termes de survie, de qualité de vie ou d'autres critères pertinents. 
-      Ils doivent obligatoirement obtenir une autorisation de mise sur le marché. Vérifiez le statut d'autorisation dans le contexte pour cela. '''
-    elif y == 1:
-      prompt += ''' Les médicaments dans ce groupe sont principalement destinés au traitement des infections et de la fibrose. Il est essentiel de sensibiliser le patient à l'importance 
-      de l'utilisation rationnelle des antibiotiques pour lutter contre les infections. De plus, pour les médicaments visant à traiter la fibrose, il est crucial qu'ils présentent un 
-      profil de sécurité acceptable, garantissant ainsi la santé et le bien-être des patients. '''
-    elif y == 2:
-      prompt += ''' Les médicaments dans ce groupe traitent le plus souvent l'hypertension essentielle et l'insuffisance rénale. Les médicaments contre l'hypertension doivent être 
-      sûrs et efficaces pour les populations à risque, telles que les personnes âgées, les personnes souffrant d'autres maladies et les femmes enceintes ou allaitantes. 
-      Pour les médicaments contre l'insuffisance rénale, il est crucial d'informer les patients de l'importance de la surveillance de la fonction rénale pendant le traitement, afin de garantir des résultats optimaux. '''
-    else :
-      prompt += ''' 'Les médicaments dans ce groupe sont principalement utilisés pour le traitement des cancers, notamment chez les adultes atteints. La réglementation des médicaments 
-      contre le cancer doit prendre en compte la complexité de la maladie, ses différentes formes et ses stades de progression. De plus, les effets indésirables associés aux traitements 
-      contre le cancer doivent être rigoureusement documentés et gérés de manière appropriée pour assurer la sécurité des patients. En parallèle, les soins des patients atteints de maladies 
-      telles que le psoriasis nécessitent une attention particulière. Il est crucial de surveiller de près les effets indésirables des médicaments utilisés pour traiter le psoriasis, 
-      car ils peuvent avoir un impact significatif sur la qualité de vie des patients. De même, la réglementation des médicaments contre la maladie de Parkinson doit être adaptée aux caractéristiques
-       uniques de cette maladie neurodégénérative, telles que la progression progressive de la maladie et la variabilité des symptômes d'un patient à l'autre. Il est essentiel que les traitements disponibles 
-       pour la maladie de Parkinson soient efficaces et sûrs, permettant ainsi d'améliorer la qualité de vie des patients et de leur offrir un soulagement optimal des symptômes.'''
-          
-    prompt += '''
-    Assures-toi d'inclure explicitement le Statut d'autorisation, la Date de révision, les dosages recommandés, les incompatibilités, les mises en garde spéciales et précautions d'emploi, ainsi que les contre-indications et l'URL vers le site EMA du medicament en te basant sur le context donné, sans donner d'informaions sur les médicaments ci-dessus.
+    last_questions = ''  # Variable pour stocker les dernières questions posées
 
-    Contexte:
-    {similar_medications_in_cluster, df}
+    prompts = [
+        f"## Donne l'Encadré pour la notice de {drug}",
+        f"## Que contient cette notice ?",
+        f"## Qu'est-ce que {drug} et comment l'utiliser ?",
+        f"## Quelles sont les informations à connaître avant de prendre {drug} ?",
+        f"## Comment prendre {drug} ?",
+        f"## Quels sont les effets indésirables éventuels de {drug} ?",
+        f"## Comment conserver {drug} ?",
+        f"## Contenu de l'emballage et autres informations concernant {drug}"
+    ]
+    new_prompts = []
+    for prompt_sec in prompts:
+        last_questions += f'\n{prompt_sec}'
+        prompt_secw = prompt if prompts[0] else '' + prompt_sec.format(drug=drug) + f'Voici les dernières questions posées:{last_questions}'
+        new_prompts.append(prompt_secw)
 
-     Le format de sortie doit être en Markdown :
-     Le titre principal doit commencer par #.
-     Les sous-titres doivent commencer par ##.
-     Les listes doivent commencer par *.
-     '''
+    full_response = ''
+    with ThreadPoolExecutor() as executor:
+        responses = executor.map(llm, new_prompts)
+        for response in responses:
+          full_response += response
 
-    # Découpage du prompt en chunks pour respecter la limite de longueur
-    max_length = 512
-    prompt_chunks = [prompt[i:i+max_length] for i in range(0, len(prompt), max_length)]
 
-    # Génération du texte réglementaire à partir du prompt en utilisant le modèle de langage mixte
-    generated_text_chunks = []
-    for prompt_chunk in prompt_chunks:
-        output = mistral_llm(prompt_chunk)
-        generated_text_chunks.append(output)
-
-    generated_text = ''.join(generated_text_chunks)
-    generated_text = '\n'.join([p for p in generated_text.split('\n')[1:] if len(p) > 0])
+    #full_response = ''.join(response)
+    
 
     # Retour du texte généré
-    return generated_text
+    return full_response
     
 @app.get('/')
 def index():
