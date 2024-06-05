@@ -57,7 +57,7 @@ def extract_regulation(drug):
     # Recherche de médicaments similaires dans le même cluster
     df_clus = df[df['cluster_labels'] == y[0]]
     # Recherche de médicaments similaires dans le même cluster
-    similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 10)
+    similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 2)
     print(similar_medications_in_cluster)
 
     # Construction du prompt pour la génération de la réglementation
