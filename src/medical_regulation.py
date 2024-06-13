@@ -11,7 +11,7 @@ import os
 import pandas as pd
 import numpy as np
 import sent2vec
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 app = FastAPI()
 cc =  ColabCode(port=8002, code=False)
@@ -22,7 +22,7 @@ df = pd.read_csv("./data/processed/data_cluster.csv")
 model = sent2vec.Sent2vecModel()
 try:
       # Chargement du modèle depuis le chemin spécifié
-        model.load_model("/content/drive/MyDrive/stage/hh/Medical_Reglementation/models/biosentvec.crdownload")
+        model.load_model("./models/biosentvec.crdownload")
 except Exception as e:
       # Gestion des erreurs lors du chargement du modèle
       print(e)
@@ -31,6 +31,18 @@ except Exception as e:
 class TextInput(BaseModel):
     # text: str = "Povidone, amidon prégélatinisé, carboxyméthylamidon sodique (type A), talc, stéarate de magnésium"
     text: str = "aflibercept"
+
+# Fonction pour traiter un groupe de prompts
+def process_prompt_group(prompt_group):
+    last_questions = ''
+    full_response = ''
+    for prompt in prompt_group:
+        last_questions += f'\n{prompt}'
+        formatted_prompt = f'{prompt}\nVoici les dernières questions posées:{last_questions}'
+        # Appel à la fonction du modèle de langage (llm)
+        response = llm(formatted_prompt)
+        full_response += response
+    return full_response    
 
 def extract_regulation(drug):
     '''Extraction de la réglementation du médicament donné'''
@@ -58,7 +70,7 @@ def extract_regulation(drug):
     # Recherche de médicaments similaires dans le même cluster
     df_clus = df[df['cluster_labels'] == y[0]]
     # Recherche de médicaments similaires dans le même cluster
-    similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 10)
+    similar_medications_in_cluster = faiss_search_similar_medications(drug, df_clus, 1)
     print(similar_medications_in_cluster)
 
     # Construction du prompt pour la génération de la réglementation
@@ -80,24 +92,19 @@ def extract_regulation(drug):
         f"## Comment conserver {drug} ?",
         f"## Contenu de l'emballage et autres informations concernant {drug}"
     ]
-    new_prompts = []
-    for prompt_sec in prompts:
-        last_questions += f'\n{prompt_sec}'
-        prompt_secw = prompt if prompts[0] else '' + prompt_sec.format(drug=drug) + f'Voici les dernières questions posées:{last_questions}'
-        new_prompts.append(prompt_secw)
+    # Regrouper les prompts par paires
+    grouped_prompts = [prompts[i:i + 2] for i in range(0, len(prompts), 2)]
 
-    full_response = ''
-    with ThreadPoolExecutor() as executor:
-        responses = executor.map(llm, new_prompts)
-        for response in responses:
-          full_response += response
+    # Utiliser ThreadPoolExecutor pour traiter les groupes en parallèle
+    full_responses = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(process_prompt_group, group) for group in grouped_prompts]
+        for future in as_completed(futures):
+            full_responses.append(future.result())
 
-
-    #full_response = ''.join(response)
-    
-
-    # Retour du texte généré
-    return full_response
+    # Combiner toutes les réponses
+    final_response = '\n'.join(full_responses)
+    return final_response
     
 @app.get('/')
 def index():
