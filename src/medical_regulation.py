@@ -95,7 +95,7 @@ def extract_regulation(drug):
     # Regrouper les prompts par paires
     grouped_prompts = [prompts[i:i + 2] for i in range(0, len(prompts), 2)]
 
-    # Utiliser ThreadPoolExecutor pour traiter les groupes en parallèle
+    # Utiliser ThreadPoolExecutor pour traiter les groupes en parallèle (time moins d'une minute)
     full_responses = []
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(process_prompt_group, group) for group in grouped_prompts]
